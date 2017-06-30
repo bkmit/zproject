@@ -92,9 +92,9 @@ BuildRequires:  $(use.project)-devel
 .if python_cffi ?= 1
 %if %{with python_cffi}
 BuildRequires:  python-cffi
-BuildRequires:  python-devel >= 2.7
+BuildRequires:  python-devel
 BuildRequires:  python-setuptools
-BuildRequires:  python3-devel >= 3.5
+BuildRequires:  python3-devel
 BuildRequires:  python3-cffi
 BuildRequires:  python3-setuptools
 %endif
@@ -186,33 +186,34 @@ This package contains development files for $(project.name): $(project.descripti
 .if python_cffi ?= 1
 
 %if %{with python_cffi}
-%package -n python2-$(project.name)_cffi
+%package -n python2-$(project.name)-cffi
 Group:  Python
 Summary:    Python CFFI bindings for $(project.name)
 Requires:  python = %{py2_ver}
 
-%description -n python2-$(project.name)_cffi
+%description -n python2-$(project.name)-cffi
 This package contains Python CFFI bindings for $(project.name)
 
-%files -n python2-$(project.name)_cffi
-%{_libdir}/python%{py2_ver}/site-packages/czmq_cffi/
-%{_libdir}/python%{py2_ver}/site-packages/czmq_cffi-*-py%{py2_ver}.egg-info/
+%files -n python2-$(project.name)-cffi
+%{_libdir}/python%{py2_ver}/site-packages/$(project.name:c)_cffi/
+%{_libdir}/python%{py2_ver}/site-packages/$(project.name:c)_cffi-*-py%{py2_ver}.egg-info/
 
-%package -n python3-$(project.name)_cffi
+%package -n python3-$(project.name)-cffi
 Group:  Python
 Summary:    Python 3 CFFI bindings for $(project.name)
-Requires:  python3 = %{py2_ver}
+Requires:  python3 = %{py3_ver}
 
-%description -n python3-$(project.name)_cffi
+%description -n python3-$(project.name)-cffi
 This package contains Python 3 CFFI bindings for $(project.name)
 
-%files -n python3-$(project.name)_cffi
-%{_libdir}/python%{py3_ver}/site-packages/czmq_cffi/
-%{_libdir}/python%{py3_ver}/site-packages/czmq_cffi-*-py%{py3_ver}.egg-info/
+%files -n python3-$(project.name)-cffi
+%{_libdir}/python%{py3_ver}/site-packages/$(project.name:c)_cffi/
+%{_libdir}/python%{py3_ver}/site-packages/$(project.name:c)_cffi-*-py%{py3_ver}.egg-info/
 %endif
 .endif
 
 %prep
+.if python_cffi ?= 1
 #FIXME: %{error:...} did not worked for me
 %if %{with python_cffi}
 %if %{without drafts}
@@ -220,6 +221,7 @@ echo "FATAL: python_cffi not yet supported w/o drafts"
 exit 1
 %endif
 %endif
+.endif
 
 %setup -q
 
@@ -234,11 +236,11 @@ make %{_smp_mflags}
 .if python_cffi ?= 1
 
 %if %{with python_cffi}
-# Problem: we need pkg-config points to built and not yet installed copy of czmq
+# Problem: we need pkg-config points to built and not yet installed copy of $(project.name)
 # Solution: chicken-egg problem - let's make "fake" pkg-config file
 sed -e "s@^libdir.*@libdir=`pwd`/src/.libs@" \\
     -e "s@^includedir.*@includedir=`pwd`/include@" \\
-    src/libczmq.pc > bindings/python_cffi/libczmq.pc
+    src/$(project.libname).pc > bindings/python_cffi/$(project.libname).pc
 cd bindings/python_cffi
 export PKG_CONFIG_PATH=`pwd`
 python2 setup.py build
