@@ -40,7 +40,7 @@ Source:         $(string.replace (project.name, "_|-"):lower)
 Section:        net
 Priority:       optional
 Maintainer:     $(project.name) Developers <$(project.email)>
-Standards-Version: 4.0.0
+Standards-Version: 4.0.1.0
 Build-Depends: debhelper (>= 9),
     pkg-config,
 .for project.use
@@ -136,7 +136,7 @@ Description: runnable binaries from $(project.name)
 Package: $(string.replace (project.name, "_|-"):lower)-dbg
 Architecture: any
 Section: debug
-Priority: extra
+Priority: optional
 Depends:
 .if project.has_main | count(project.bin) > 0
     $(string.replace (project.name, "_|-"):lower) (= ${binary:Version}),
@@ -190,7 +190,7 @@ Files: *
 Copyright: 2015- $(project.name) Developers <$(project.email)>
 License: $(project.name)_license
 .   for project.license
- $(string.search_replace(string.trim (license.), '\n\n', '\n.\n'):block)
+ $(string.replace(string.trim (license.), '\n\n|\n.\n'):block)
 .   endfor
 .output "packaging/debian/format"
 3.0 (quilt)
@@ -289,6 +289,9 @@ override_dh_auto_configure:
 .if systemd ?= 1
 		--with-systemd-units \\
 .endif
+.for project.use where use.optional
+		--with-$(use.libname)=yes \\
+.endfor
 		--with-docs=\$(DOCS) \\
 		--enable-drafts=\$(DRAFTS)
 

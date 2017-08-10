@@ -137,7 +137,7 @@ matrix:
         - *pkg_deps_common
 
 before_install:
-- if [ "$TRAVIS_OS_NAME" == "osx" ] ; then brew update; brew install binutils ; fi
+- if [ "$TRAVIS_OS_NAME" == "osx" -a "$BUILD_TYPE" == "android" ] ; then brew install binutils ; fi
 - if [ "$TRAVIS_OS_NAME" == "osx" -a "$BUILD_TYPE" == "valgrind" ] ; then brew install valgrind ; fi
 
 # Hand off to generated script for each BUILD_TYPE
@@ -205,12 +205,12 @@ default|default-Werror|default-with-docs|valgrind)
     if which ccache && ls -la /usr/lib/ccache ; then
         HAVE_CCACHE=yes
     fi
+    mkdir -p "${CCACHE_DIR}" || HAVE_CCACHE=no
 
     if [ "$HAVE_CCACHE" = yes ] && [ -d "$CCACHE_DIR" ]; then
         echo "CCache stats before build:"
         ccache -s || true
     fi
-    mkdir -p "${HOME}/.ccache"
 
     CONFIG_OPTS=()
     COMMON_CFLAGS=""
@@ -404,6 +404,13 @@ default|default-Werror|default-with-docs|valgrind)
         $CI_TIME make -j4
         $CI_TIME make install
         cd "${BASE_PWD}"
+.           if use.optional
+        CONFIG_OPTS+=("--with-$(use.libname)=yes")
+.           endif
+.       endif
+.       if use.optional
+    else
+        CONFIG_OPTS+=("--with-$(use.libname)=yes")
 .       endif
     fi
 .   endfor
